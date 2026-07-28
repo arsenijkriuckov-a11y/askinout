@@ -354,8 +354,6 @@
   </div>
 </div>
 
-<div id="adminRoot"></div>
-
 <script>
 // ---------- ambient floating hearts ----------
 const floatEmojis = ['💗','✨','💕','🌸'];
@@ -485,27 +483,125 @@ function goTo(next){
   document.querySelectorAll('#dots span').forEach((d,i)=> d.classList.toggle('active', i===next));
 }
 
-// ---------- storage ----------
+// ---------- storage: writes straight into responses.txt in your GitHub repo ----------
+// FILL THESE IN:
+// - GITHUB_OWNER: your github username
+// - GITHUB_REPO: the repo this page lives in (make it a dedicated repo, nothing else important in it)
+// - GITHUB_TOKEN: a FINE-GRAINED personal access token, scoped to ONLY this repo,
+//                 with ONLY "Contents: Read and write" permission. Nothing else.
+//   Create one at: https://github.com/settings/personal-access-tokens/new
+const GITHUB_OWNER  = 'arsenijkriuckov-a11y';
+const GITHUB_REPO   = 'askinout';
+const GITHUB_BRANCH = 'main';
+const GITHUB_TOKEN  = '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';
+const FILE_PATH = 'responses.txt';
+
+function b64EncodeUnicode(str){
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function b64DecodeUnicode(str){
+  return decodeURIComponent(escape(atob(str)));
+}
+
 async function saveResponse(){
+
   const suggestValue = document.getElementById('suggestInput').value.trim();
-  const payload = {
-    activities: Array.from(state.activities),
-    customSuggestion: state.activities.has('suggest') ? suggestValue : '',
-    date: state.date,
-    time: state.time,
-    attemptsToDodge: state.attempts,
-    submittedAt: new Date().toISOString()
+
+  const entryText =
+`
+----------------------------------------
+submitted: ${new Date().toLocaleString()}
+date picked: ${state.date}
+time picked: ${state.time}
+activities: ${Array.from(state.activities).join(', ')}
+custom suggestion: ${suggestValue || '-'}
+attempts to say no: ${state.attempts}
+`;
+
+  const apiUrl =
+  `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${FILE_PATH}`;
+
+  const headers = {
+    "Authorization": `Bearer ${GITHUB_TOKEN}`,
+    "Accept": "application/vnd.github+json",
+    "Content-Type": "application/json"
   };
-  try{
-    if(window.storage){
-      await window.storage.set(`response:${responseId}`, JSON.stringify(payload), true);
+
+
+  try {
+
+    // Get existing file
+    const getFile = await fetch(
+      `${apiUrl}?ref=${GITHUB_BRANCH}`,
+      {headers}
+    );
+
+
+    if(!getFile.ok){
+      throw new Error("Cannot find responses.txt");
     }
-  }catch(err){
-    console.error('storage failed', err);
+
+
+    const fileData = await getFile.json();
+
+
+    // Decode existing content
+    const oldText = decodeURIComponent(
+      escape(
+        atob(fileData.content.replace(/\n/g,""))
+      )
+    );
+
+
+    // Add new answer
+    const newText = oldText + entryText;
+
+
+    // Encode again
+    const encoded = btoa(
+      unescape(
+        encodeURIComponent(newText)
+      )
+    );
+
+
+    // Update file
+    const update = await fetch(
+      apiUrl,
+      {
+        method:"PUT",
+        headers,
+        body:JSON.stringify({
+          message:"new date response",
+          content:encoded,
+          branch:GITHUB_BRANCH,
+          sha:fileData.sha
+        })
+      }
+    );
+
+
+    if(!update.ok){
+
+      const error = await update.text();
+
+      throw new Error(error);
+    }
+
+
+    console.log("Saved successfully!");
+
   }
-  try{
-    localStorage.setItem(`askout-response-${responseId}`, JSON.stringify(payload));
-  }catch(err){ /* ignore */ }
+
+  catch(error){
+
+    console.error(error);
+    alert(
+      "Failed saving response:\n\n"+error.message
+    );
+
+  }
+
 }
 
 // ---------- confetti hearts on final slide ----------
@@ -522,54 +618,9 @@ function spawnHearts(){
   }
 }
 
-// ---------- admin view: open the same link and add #admin to the URL ----------
-async function renderAdmin(){
-  const root = document.getElementById('adminRoot');
-  const panel = document.createElement('div');
-  panel.className = 'admin';
-  panel.innerHTML = '<h2>responses 💌</h2><div id="entries">loading...</div>';
-  root.appendChild(panel);
-  const entriesEl = panel.querySelector('#entries');
-
-  try{
-    if(!window.storage){
-      entriesEl.textContent = 'storage isn\'t available in this context.';
-      return;
-    }
-    const list = await window.storage.list('response:', true);
-    if(!list || !list.keys || list.keys.length === 0){
-      entriesEl.textContent = 'no responses yet.';
-      return;
-    }
-    entriesEl.innerHTML = '';
-    const items = [];
-    for(const key of list.keys){
-      try{
-        const res = await window.storage.get(key, true);
-        if(res && res.value){ items.push(JSON.parse(res.value)); }
-      }catch(e){ /* skip */ }
-    }
-    items.sort((a,b)=> new Date(b.submittedAt) - new Date(a.submittedAt));
-    items.forEach(item=>{
-      const div = document.createElement('div');
-      div.className = 'entry';
-      div.innerHTML = `
-        <b>${item.date || '?'} at ${item.time || '?'}</b><br>
-        activities: ${(item.activities||[]).join(', ') || 'none'}<br>
-        ${item.customSuggestion ? `his suggestion: "${item.customSuggestion}"<br>` : ''}
-        tried to say no: ${item.attemptsToDodge ?? 0} time(s)<br>
-        <span style="opacity:.6;font-size:12px;">submitted ${new Date(item.submittedAt).toLocaleString()}</span>
-      `;
-      entriesEl.appendChild(div);
-    });
-  }catch(err){
-    entriesEl.textContent = 'couldn\'t load responses: ' + err.message;
-  }
-}
-
-if(window.location.hash === '#admin'){
-  renderAdmin();
-}
+// responses now arrive straight to your email via Formspree — no admin
+// panel needed here. Check your inbox (and spam folder, just in case)
+// after he submits.
 </script>
 </body>
 </html>
