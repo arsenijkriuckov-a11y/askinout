@@ -483,25 +483,7 @@ function goTo(next){
   document.querySelectorAll('#dots span').forEach((d,i)=> d.classList.toggle('active', i===next));
 }
 
-// ---------- storage: writes straight into responses.txt in your GitHub repo ----------
-// FILL THESE IN:
-// - GITHUB_OWNER: your github username
-// - GITHUB_REPO: the repo this page lives in (make it a dedicated repo, nothing else important in it)
-// - GITHUB_TOKEN: a FINE-GRAINED personal access token, scoped to ONLY this repo,
-//                 with ONLY "Contents: Read and write" permission. Nothing else.
-//   Create one at: https://github.com/settings/personal-access-tokens/new
-const GITHUB_OWNER  = 'arsenijkriuckov-a11y';
-const GITHUB_REPO   = 'askinout';
-const GITHUB_BRANCH = 'main';
-const GITHUB_TOKEN  = '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';
-const FILE_PATH = 'responses.txt';
 
-function b64EncodeUnicode(str){
-  return btoa(unescape(encodeURIComponent(str)));
-}
-function b64DecodeUnicode(str){
-  return decodeURIComponent(escape(atob(str)));
-}
 
 async function saveResponse(){
 
