@@ -538,8 +538,10 @@ attempts to say no: ${state.attempts}
 
 
     if(!getFile.ok){
-      throw new Error("Cannot find responses.txt");
-    }
+    const error = await getFile.text();
+    console.log("GitHub response:", error);
+    throw new Error("Cannot find responses.txt");
+}
 
 
     const fileData = await getFile.json();
