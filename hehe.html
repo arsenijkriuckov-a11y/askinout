@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>a question for you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;1,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-1:#ffe9ee;
+    --bg-2:#ffd7e6;
+    --card:#fffdfd;
+    --ink:#3d2a35;
+    --muted:#9b7b87;
+    --accent:#ff5c8a;
+    --accent-dark:#e8446f;
+    --accent-soft:#ffd3e0;
+    --lav:#b08bff;
+    --lav-soft:#e8def9;
+    --gold:#ffca6a;
+    --radius:26px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Nunito',sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 15% 20%, var(--bg-2) 0%, transparent 45%),
+      radial-gradient(circle at 85% 80%, var(--lav-soft) 0%, transparent 40%),
+      var(--bg-1);
+    overflow:hidden;
+    position:relative;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .floaty{
+    position:fixed;
+    font-size:22px;
+    opacity:.35;
+    animation:drift linear infinite;
+    pointer-events:none;
+    user-select:none;
+  }
+  @keyframes drift{
+    0%{ transform:translateY(110vh) rotate(0deg); }
+    100%{ transform:translateY(-10vh) rotate(25deg); }
+  }
+
+  .stage{
+    position:relative;
+    width:min(440px, 92vw);
+    min-height:560px;
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:0 30px 60px -20px rgba(220,90,130,.35), 0 2px 8px rgba(220,90,130,.15);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .eyebrow{
+    font-family:'Fredoka',sans-serif;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent-dark);
+    text-align:center;
+    padding-top:26px;
+    opacity:.75;
+  }
+
+  .slides{
+    position:relative;
+    flex:1;
+    display:flex;
+  }
+  .slide{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:28px 30px 34px;
+    text-align:center;
+    transition:transform .5s cubic-bezier(.65,0,.35,1), opacity .45s ease;
+  }
+  .slide.current{ transform:translateX(0); opacity:1; }
+  .slide.exit-left{ transform:translateX(-115%); opacity:0; }
+  .slide.enter-right{ transform:translateX(115%); opacity:0; }
+  .slide.hidden-slide{ visibility:hidden; pointer-events:none; }
+
+  h1.title{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:28px;
+    line-height:1.25;
+    margin:6px 0 10px;
+  }
+  p.sub{
+    font-size:15px;
+    color:var(--muted);
+    margin:0 0 22px;
+    max-width:320px;
+  }
+
+  /* --- popup slide --- */
+  .popup-emoji{ font-size:52px; margin-bottom:6px; }
+  .btn-row{
+    position:relative;
+    display:flex;
+    gap:16px;
+    justify-content:center;
+    align-items:center;
+    margin-top:18px;
+    width:100%;
+    min-height:64px;
+  }
+  .btn{
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:16px;
+    border:none;
+    border-radius:999px;
+    padding:14px 30px;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:active{ transform:scale(.96); }
+  .btn-yes{
+    background:linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color:white;
+    box-shadow:0 10px 20px -8px rgba(232,68,111,.6);
+  }
+  .btn-yes:hover{ box-shadow:0 14px 24px -8px rgba(232,68,111,.7); transform:translateY(-1px); }
+  .btn-no{
+    background:var(--accent-soft);
+    color:var(--accent-dark);
+    position:relative;
+    left:0; top:0;
+  }
+  .no-wrap{
+    position:relative;
+  }
+  .escape-note{
+    margin-top:16px;
+    font-family:'Nunito',sans-serif;
+    font-style:italic;
+    font-size:12.5px;
+    color:var(--muted);
+    min-height:16px;
+  }
+
+  /* --- activities slide --- */
+  .options-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    width:100%;
+    margin-bottom:20px;
+  }
+  .opt{
+    border:2px solid var(--accent-soft);
+    background:#fff;
+    border-radius:16px;
+    padding:14px 8px;
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    font-size:13.5px;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    transition:all .15s ease;
+    color:var(--ink);
+  }
+  .opt .ico{ font-size:22px; }
+  .opt.selected{
+    border-color:var(--accent);
+    background:var(--accent-soft);
+    transform:translateY(-2px);
+    box-shadow:0 8px 16px -8px rgba(232,68,111,.4);
+  }
+
+  /* --- datetime slide --- */
+  .field{
+    width:100%;
+    text-align:left;
+    margin-bottom:16px;
+  }
+  .field label{
+    display:block;
+    font-family:'Fredoka',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    color:var(--accent-dark);
+    margin-bottom:6px;
+  }
+  .field input{
+    width:100%;
+    font-family:'Nunito',sans-serif;
+    font-size:15px;
+    padding:12px 14px;
+    border-radius:12px;
+    border:2px solid var(--lav-soft);
+    background:#fff;
+    color:var(--ink);
+  }
+  .field input:focus{ outline:none; border-color:var(--lav); }
+
+  .primary-cta{
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:16px;
+    border:none;
+    border-radius:999px;
+    padding:14px 34px;
+    cursor:pointer;
+    color:white;
+    background:linear-gradient(135deg, var(--lav) 0%, #8f5ff0 100%);
+    box-shadow:0 10px 20px -8px rgba(150,90,240,.5);
+    transition:opacity .2s ease, transform .15s ease;
+    margin-top:6px;
+  }
+  .primary-cta:disabled{ opacity:.4; cursor:not-allowed; }
+  .primary-cta:not(:disabled):hover{ transform:translateY(-1px); }
+
+  /* --- final slide --- */
+  .yay{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:54px;
+    color:var(--accent-dark);
+    margin:0;
+  }
+  .yay-sub{ color:var(--muted); font-size:14px; margin-top:10px; }
+
+  .heart-burst{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .heart-burst span{
+    position:absolute;
+    top:-10%;
+    font-size:20px;
+    animation:fall 3.2s linear forwards;
+    opacity:.9;
+  }
+  @keyframes fall{
+    to{ transform:translateY(620px) rotate(200deg); opacity:0; }
+  }
+
+  .dots{
+    display:flex;
+    gap:6px;
+    justify-content:center;
+    padding-bottom:20px;
+  }
+  .dots span{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--accent-soft);
+  }
+  .dots span.active{ background:var(--accent-dark); width:18px; border-radius:4px; transition:all .3s ease;}
+
+  /* admin panel */
+  .admin{
+    position:fixed; inset:0;
+    background:rgba(61,42,53,.92);
+    color:#fff;
+    z-index:999;
+    padding:30px 20px;
+    overflow-y:auto;
+    font-family:'Nunito',sans-serif;
+  }
+  .admin h2{ font-family:'Fredoka',sans-serif; }
+  .admin .entry{
+    background:rgba(255,255,255,.08);
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:12px;
+    font-size:14px;
+    line-height:1.6;
+  }
+  .admin .entry b{ color:var(--gold); }
+</style>
+</head>
+<body>
+
+<div id="floaties"></div>
+
+<div class="stage">
+  <div class="eyebrow" id="eyebrow">a lil question</div>
+  <div class="slides" id="slides">
+
+    <!-- Slide 0: popup -->
+    <div class="slide current" data-slide="0">
+      <div class="popup-emoji">🥺</div>
+      <h1 class="title">wanna go out with me? :3</h1>
+      <div class="btn-row">
+        <button class="btn btn-yes" id="yesBtn">YES</button>
+        <div class="no-wrap">
+          <button class="btn btn-no" id="noBtn">no</button>
+        </div>
+      </div>
+      <div class="escape-note" id="escapeNote">&nbsp;</div>
+    </div>
+
+    <!-- Slide 1: activities -->
+    <div class="slide enter-right hidden-slide" data-slide="1">
+      <h1 class="title">okay but what should we do? 👀</h1>
+      <p class="sub">pick as many as you want</p>
+      <div class="options-grid" id="optionsGrid"></div>
+      <div class="field suggest-field" id="suggestField" style="display:none;">
+        <label for="suggestInput">what do you have in mind? 👀</label>
+        <input type="text" id="suggestInput" placeholder="e.g. rooftop bar, mini golf...">
+      </div>
+      <button class="primary-cta" id="toDatetimeBtn" disabled>next</button>
+    </div>
+
+    <!-- Slide 2: date + time -->
+    <div class="slide enter-right hidden-slide" data-slide="2">
+      <h1 class="title">when are you free? 📅</h1>
+      <p class="sub">pick a day and time that works</p>
+      <div class="field">
+        <label for="dateInput">date</label>
+        <input type="date" id="dateInput">
+      </div>
+      <div class="field">
+        <label for="timeInput">time</label>
+        <input type="time" id="timeInput">
+      </div>
+      <button class="primary-cta" id="submitBtn" disabled>lock it in</button>
+    </div>
+
+    <!-- Slide 3: thanks -->
+    <div class="slide enter-right hidden-slide" data-slide="3">
+      <div class="heart-burst" id="heartBurst"></div>
+      <p class="yay">YAY ^^</p>
+      <p class="yay-sub">see you then 💌</p>
+    </div>
+
+  </div>
+  <div class="dots" id="dots">
+    <span class="active"></span><span></span><span></span><span></span>
+  </div>
+</div>
+
+<div id="adminRoot"></div>
+
+<script>
+// ---------- ambient floating hearts ----------
+const floatEmojis = ['💗','✨','💕','🌸'];
+const floatiesEl = document.getElementById('floaties');
+for(let i=0;i<10;i++){
+  const el = document.createElement('div');
+  el.className='floaty';
+  el.textContent = floatEmojis[i % floatEmojis.length];
+  el.style.left = Math.random()*100+'vw';
+  el.style.animationDuration = (10+Math.random()*10)+'s';
+  el.style.animationDelay = (Math.random()*10)+'s';
+  floatiesEl.appendChild(el);
+}
+
+// ---------- state ----------
+const state = {
+  activities: new Set(),
+  date: '',
+  time: '',
+  attempts: 0
+};
+const responseId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random()));
+
+const ACTIVITIES = [
+  {id:'arcade', label:'arcade at the mall', icon:'🕹️'},
+  {id:'food', label:'grab some food', icon:'🍜'},
+  {id:'snacks', label:'snacks & chill', icon:'🍿'},
+  {id:'nightwalk', label:'drinks & a walk (watch the lights at night)', icon:'🌃'},
+  {id:'suggest', label:'suggest something yourself', icon:'💡'},
+];
+
+const eyebrows = ['a lil question','pick your poison','save the date','~'];
+
+// ---------- popup / dodging NO button ----------
+const noBtn = document.getElementById('noBtn');
+const yesBtn = document.getElementById('yesBtn');
+const escapeNote = document.getElementById('escapeNote');
+const notes = [
+  'nice try',
+  'not today',
+  'try again 😌',
+  'so close!',
+  'almost had it',
+  'keep trying lol',
+  'this isn\'t happening',
+  'give up yet?'
+];
+
+function dodge(){
+  state.attempts++;
+  const stage = document.querySelector('.stage').getBoundingClientRect();
+  const btnRect = noBtn.getBoundingClientRect();
+  const maxX = stage.width - btnRect.width - 40;
+  const maxY = 90; // keep within button row vicinity vertically-ish, but allow some spread
+  const randX = (Math.random()*2-1) * (stage.width/2 - btnRect.width/2 - 20);
+  const randY = (Math.random()*2-1) * 30;
+  noBtn.style.position = 'relative';
+  noBtn.style.transform = `translate(${randX}px, ${randY}px)`;
+  const note = notes[Math.min(state.attempts-1, notes.length-1)];
+  escapeNote.textContent = `${note} (attempts to escape: ${state.attempts})`;
+}
+
+noBtn.addEventListener('mouseenter', dodge);
+noBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); dodge(); }, {passive:false});
+noBtn.addEventListener('click', (e)=>{ e.preventDefault(); dodge(); });
+noBtn.addEventListener('pointerdown', (e)=>{ e.preventDefault(); dodge(); });
+
+yesBtn.addEventListener('click', ()=> goTo(1));
+
+// ---------- activities grid ----------
+const grid = document.getElementById('optionsGrid');
+ACTIVITIES.forEach(a=>{
+  const btn = document.createElement('button');
+  btn.className='opt';
+  btn.type='button';
+  btn.innerHTML = `<span class="ico">${a.icon}</span><span>${a.label}</span>`;
+  btn.addEventListener('click', ()=>{
+    if(state.activities.has(a.id)){ state.activities.delete(a.id); btn.classList.remove('selected'); }
+    else{ state.activities.add(a.id); btn.classList.add('selected'); }
+    document.getElementById('toDatetimeBtn').disabled = state.activities.size === 0;
+    document.getElementById('suggestField').style.display = state.activities.has('suggest') ? 'block' : 'none';
+  });
+  grid.appendChild(btn);
+});
+document.getElementById('toDatetimeBtn').addEventListener('click', ()=> goTo(2));
+
+// ---------- date/time ----------
+const dateInput = document.getElementById('dateInput');
+const timeInput = document.getElementById('timeInput');
+const submitBtn = document.getElementById('submitBtn');
+const today = new Date();
+dateInput.min = today.toISOString().split('T')[0];
+
+function checkDatetimeValid(){
+  submitBtn.disabled = !(dateInput.value && timeInput.value);
+}
+dateInput.addEventListener('input', checkDatetimeValid);
+timeInput.addEventListener('input', checkDatetimeValid);
+
+submitBtn.addEventListener('click', async ()=>{
+  state.date = dateInput.value;
+  state.time = timeInput.value;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'saving...';
+  await saveResponse();
+  goTo(3);
+  spawnHearts();
+});
+
+// ---------- slide navigation ----------
+let currentSlide = 0;
+function goTo(next){
+  const slides = document.querySelectorAll('.slide');
+  const from = slides[currentSlide];
+  const to = slides[next];
+  to.classList.remove('hidden-slide');
+  to.classList.add('enter-right');
+  // force reflow
+  void to.offsetWidth;
+  from.classList.add('exit-left');
+  from.classList.remove('current');
+  to.classList.remove('enter-right');
+  to.classList.add('current');
+  setTimeout(()=>{ from.classList.add('hidden-slide'); }, 520);
+  currentSlide = next;
+  document.getElementById('eyebrow').textContent = eyebrows[next];
+  document.querySelectorAll('#dots span').forEach((d,i)=> d.classList.toggle('active', i===next));
+}
+
+// ---------- storage ----------
+async function saveResponse(){
+  const suggestValue = document.getElementById('suggestInput').value.trim();
+  const payload = {
+    activities: Array.from(state.activities),
+    customSuggestion: state.activities.has('suggest') ? suggestValue : '',
+    date: state.date,
+    time: state.time,
+    attemptsToDodge: state.attempts,
+    submittedAt: new Date().toISOString()
+  };
+  try{
+    if(window.storage){
+      await window.storage.set(`response:${responseId}`, JSON.stringify(payload), true);
+    }
+  }catch(err){
+    console.error('storage failed', err);
+  }
+  try{
+    localStorage.setItem(`askout-response-${responseId}`, JSON.stringify(payload));
+  }catch(err){ /* ignore */ }
+}
+
+// ---------- confetti hearts on final slide ----------
+function spawnHearts(){
+  const burst = document.getElementById('heartBurst');
+  const emojis = ['💖','💕','✨','💗','🎉'];
+  for(let i=0;i<24;i++){
+    const s = document.createElement('span');
+    s.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    s.style.left = Math.random()*100+'%';
+    s.style.animationDelay = (Math.random()*1.2)+'s';
+    s.style.fontSize = (14+Math.random()*14)+'px';
+    burst.appendChild(s);
+  }
+}
+
+// ---------- admin view: open the same link and add #admin to the URL ----------
+async function renderAdmin(){
+  const root = document.getElementById('adminRoot');
+  const panel = document.createElement('div');
+  panel.className = 'admin';
+  panel.innerHTML = '<h2>responses 💌</h2><div id="entries">loading...</div>';
+  root.appendChild(panel);
+  const entriesEl = panel.querySelector('#entries');
+
+  try{
+    if(!window.storage){
+      entriesEl.textContent = 'storage isn\'t available in this context.';
+      return;
+    }
+    const list = await window.storage.list('response:', true);
+    if(!list || !list.keys || list.keys.length === 0){
+      entriesEl.textContent = 'no responses yet.';
+      return;
+    }
+    entriesEl.innerHTML = '';
+    const items = [];
+    for(const key of list.keys){
+      try{
+        const res = await window.storage.get(key, true);
+        if(res && res.value){ items.push(JSON.parse(res.value)); }
+      }catch(e){ /* skip */ }
+    }
+    items.sort((a,b)=> new Date(b.submittedAt) - new Date(a.submittedAt));
+    items.forEach(item=>{
+      const div = document.createElement('div');
+      div.className = 'entry';
+      div.innerHTML = `
+        <b>${item.date || '?'} at ${item.time || '?'}</b><br>
+        activities: ${(item.activities||[]).join(', ') || 'none'}<br>
+        ${item.customSuggestion ? `his suggestion: "${item.customSuggestion}"<br>` : ''}
+        tried to say no: ${item.attemptsToDodge ?? 0} time(s)<br>
+        <span style="opacity:.6;font-size:12px;">submitted ${new Date(item.submittedAt).toLocaleString()}</span>
+      `;
+      entriesEl.appendChild(div);
+    });
+  }catch(err){
+    entriesEl.textContent = 'couldn\'t load responses: ' + err.message;
+  }
+}
+
+if(window.location.hash === '#admin'){
+  renderAdmin();
+}
+</script>
+</body>
+</html>
