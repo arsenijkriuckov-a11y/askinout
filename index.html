@@ -507,99 +507,51 @@ async function saveResponse(){
 
   const suggestValue = document.getElementById('suggestInput').value.trim();
 
-  const entryText =
-`
-----------------------------------------
-submitted: ${new Date().toLocaleString()}
-date picked: ${state.date}
-time picked: ${state.time}
-activities: ${Array.from(state.activities).join(', ')}
-custom suggestion: ${suggestValue || '-'}
-attempts to say no: ${state.attempts}
-`;
+  const data = {
+    submitted: new Date().toLocaleString(),
 
-  const apiUrl =
-  `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${FILE_PATH}`;
+    date: state.date,
 
-  const headers = {
-    "Authorization": `Bearer ${GITHUB_TOKEN}`,
-    "Accept": "application/vnd.github+json",
-    "Content-Type": "application/json"
+    time: state.time,
+
+    activities: Array.from(state.activities).join(', '),
+
+    custom_suggestion: suggestValue || '-',
+
+    escape_attempts: state.attempts
   };
 
 
   try {
 
-    // Get existing file
-    const getFile = await fetch(
-      `${apiUrl}?ref=${GITHUB_BRANCH}`,
-      {headers}
-    );
-
-
-    if(!getFile.ok){
-    const error = await getFile.text();
-    console.log("GitHub response:", error);
-    throw new Error("Cannot find responses.txt");
-}
-
-
-    const fileData = await getFile.json();
-
-
-    // Decode existing content
-    const oldText = decodeURIComponent(
-      escape(
-        atob(fileData.content.replace(/\n/g,""))
-      )
-    );
-
-
-    // Add new answer
-    const newText = oldText + entryText;
-
-
-    // Encode again
-    const encoded = btoa(
-      unescape(
-        encodeURIComponent(newText)
-      )
-    );
-
-
-    // Update file
-    const update = await fetch(
-      apiUrl,
+    const response = await fetch(
+      "https://formspree.io/f/maqrvabz",
       {
-        method:"PUT",
-        headers,
-        body:JSON.stringify({
-          message:"new date response",
-          content:encoded,
-          branch:GITHUB_BRANCH,
-          sha:fileData.sha
-        })
+        method: "POST",
+        headers:{
+          "Content-Type":"application/json",
+          "Accept":"application/json"
+        },
+        body: JSON.stringify(data)
       }
     );
 
 
-    if(!update.ok){
-
-      const error = await update.text();
-
-      throw new Error(error);
+    if(!response.ok){
+      throw new Error("Formspree failed");
     }
 
 
-    console.log("Saved successfully!");
+    console.log("Response sent!");
 
   }
 
   catch(error){
 
     console.error(error);
+
     alert(
-      "Failed saving response:\n\n"+error.message
+      "Something went wrong sending the answer :("
     );
 
   }
